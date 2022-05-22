@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "475363026319",
+    "project_id": "rma-project-managment-app",
+    "storage_bucket": "rma-project-managment-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:475363026319:android:39114eb469c6c49bd397fa",
+        "android_client_info": {
+          "package_name": "com.example.rma_project"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "475363026319-rkpds9t03uejh6og1hohhitg5epvvgtr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzIXC2F4J5rzzHX7hsRPW4vqeLDAWWIEw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "475363026319-rkpds9t03uejh6og1hohhitg5epvvgtr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
