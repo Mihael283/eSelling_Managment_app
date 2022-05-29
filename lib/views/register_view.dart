@@ -1,9 +1,9 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rma_project/constants/routes.dart';
 import 'package:rma_project/firebase_options.dart';
 
+import '../services/auth/auth_exceptions.dart';
+import '../services/auth/auth_service.dart';
 import '../utilities/show_error_dialog.dart';
 
 class RegisterView extends StatefulWidget {
@@ -38,9 +38,7 @@ class _RegisterViewState extends State<RegisterView> {
 
       ),
       body: FutureBuilder(
-        future: Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        ),
+        future: AuthService.firebase().initialize(),
         builder: (context,snapshot){
           switch (snapshot.connectionState){
             case ConnectionState.done:
@@ -53,28 +51,24 @@ class _RegisterViewState extends State<RegisterView> {
                         final email = _email.text;
                         final password = _password.text;
                         try {
-                          final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
+                          final userCredential = await AuthService.firebase().createUser(email: email, password: password);
                           Navigator.of(context).pushNamed(verifyEmailRoute);
-                          final user = FirebaseAuth.instance.currentUser;
-                          await user?.sendEmailVerification();
-                        } on FirebaseAuthException catch (e){
-                          if (e.code == 'weak-password'){
+                          final user = AuthService.firebase().currentUser;
+                          AuthService.firebase().sendEmailVerification();
+                        } on WeakPasswordAuthException {
                             await showErrorDialog(context, "Weak password!");
-                          }
-                          else if (e.code == 'email-already-in-use'){
+                        } on EmailAlreadyInUseAuthException{
                             await showErrorDialog(context, "Email is already in use!");
-                          }
-                          else if (e.code == 'invalid-email'){
+                        } on InvalidEmailAuthException{
                             await showErrorDialog(context, "Invalid email address!");
-                          }
-                        } catch (e){
-                          await showErrorDialog(context, e.toString());
+                        } on GenericAuthException{
+                            await showErrorDialog(context, "AuthenticationError!");
+                        }catch (e){
+                            await showErrorDialog(context, e.toString());
                         }
                       },
-
                       child: const Text('Register')
                   ),
-
                   TextButton(
                       onPressed: () {
                         Navigator.of(context).pushNamedAndRemoveUntil(loginRoute, (route) => false);
