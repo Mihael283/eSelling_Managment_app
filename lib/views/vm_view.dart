@@ -4,14 +4,16 @@ import 'package:rma_project/constants/routes.dart';
 import '../enums/menu_action.dart';
 import '../services/auth/auth_service.dart';
 
-class NotesView extends StatefulWidget {
-  const NotesView({Key? key}) : super(key: key);
+class VMView extends StatefulWidget {
+  const VMView({Key? key}) : super(key: key);
 
   @override
-  State<NotesView> createState() => _NotesViewState();
+  State<VMView> createState() => _VMViewState();
 }
 
-class _NotesViewState extends State<NotesView> {
+List<String> litems = ["1","2","Third","4"];
+
+class _VMViewState extends State<VMView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,7 +37,19 @@ class _NotesViewState extends State<NotesView> {
           },)
         ],
       ),
-      body: const Text("Hello world"),
+      body: ListView.builder
+        (
+          itemCount: 2,
+          itemBuilder: (BuildContext context,int index){
+            return ListTile(
+                leading: Icon(Icons.list),
+                trailing: Text("Online/Offline",
+                  style: TextStyle(color: Colors.green,fontSize: 15),),
+                title:Text("VM $index"),
+                onTap: () => null
+            );
+          }
+      )
     );
   }
 }

@@ -4,7 +4,7 @@ import 'package:rma_project/services/auth/auth_service.dart';
 import 'package:rma_project/views/login_view.dart';
 import 'package:rma_project/views/register_view.dart';
 import 'package:rma_project/views/verify_email_view.dart';
-import 'package:rma_project/views/notes_view.dart';
+import 'package:rma_project/views/vm_view.dart';
 
 
 void main() {
@@ -19,7 +19,7 @@ void main() {
       routes: {
         loginRoute: (context) => const LoginView(),
         registerRoute: (context) => const RegisterView(),
-        notesRoute: (context) => const NotesView(),
+        VM_ScreenRoute: (context) => const VMView(),
         verifyEmailRoute: (context) => const VerifyEmailView(),
       },
     ),
@@ -40,7 +40,7 @@ class HomePage extends StatelessWidget {
             final user = AuthService.firebase().currentUser;
             if(user != null){
               if(user.isEmailVerified){
-                return const NotesView();
+                return const VMView();
               }
               else{
                 return const VerifyEmailView();
