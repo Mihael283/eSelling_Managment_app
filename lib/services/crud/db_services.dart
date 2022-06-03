@@ -4,15 +4,10 @@ import 'package:path/path.dart' show join;
 import 'package:path_provider/path_provider.dart' show MissingPlatformDirectoryException, getApplicationDocumentsDirectory;
 
 import '../../constants/database.dart';
-
-class DatabaseAlreadyOpenException implements Exception {}
-
-class DatabaseIsNotOpen implements Exception {}
-
-class CouldNotDeleteUser implements Exception {}
-
-class UserAlreadyExits implements Exception {}
-class CouldNotFindUser implements Exception {}
+import 'db_accounts.dart';
+import 'db_exceptions.dart';
+import 'db_users.dart';
+import 'db_vms.dart';
 
 class DBService {
   Database? _db;
@@ -99,93 +94,88 @@ class DBService {
 
     return VM;
   }
-}
-@immutable
-class DatabaseUser{
-  final int id;
-  final String email;
 
-  const DatabaseUser({
-    required this.id,
-    required this.email,
-  });
+  Future<DatabaseVMs> getVM({required String name}) async{
+    final db = _getDatabaseOrThrow();
+    final results = await db.query(vmTable,limit: 1,where: 'name = ?',whereArgs: [name.toLowerCase()]);
 
-  DatabaseUser.fromRow(Map<String, Object?> map): id = map[idColumn] as int, email = map[emailColumn] as String;
+    if(results.isEmpty){
+      throw CouldNotFindVM();
+    }
+    else{
+      return DatabaseVMs.fromRow(results.first);
+    }
+  }
 
-  @override
-  String toString() => 'Person, ID = $id, Email = $email';
+  Future<void> deleteVM({required int id}) async{
+    final db = _getDatabaseOrThrow();
+    final deletedCount = await db.delete(vmTable,where: 'id = ?', whereArgs: [id],);
+    if(deletedCount != 1){
+      throw CouldNotDeleteVM();
+    }
+  }
 
-  @override
-  bool operator == (covariant DatabaseUser other) => id == other.id;
+  Future<DatabaseAccounts> addAccount({required DatabaseVMs vm, required String username, required String password, required String ingamename }) async{
+    final db = _getDatabaseOrThrow();
+    final dbVM = await getVM(name: vm.name);
+    if(dbVM != vm){
+      throw CouldNotDeleteVM();
+    }
 
-  @override
-  int get hashCode => id.hashCode;
+    final accountID = await db.insert(accountsTable,{vmNameColumn: vm.name, usernameColumn: username ,passwordColumn: password, ingamenameColumn: ingamename, isPlayingColumn: 0});
+    final acc = DatabaseAccounts(id: accountID, vmName: vm.name, username: username, password: password, ingamename: ingamename, rank: "unknown", isPlaying: false);
+
+    return acc;
+  }
+
+  Future<DatabaseAccounts> getAccount({required String ingamename}) async{
+    final db = _getDatabaseOrThrow();
+    final results = await db.query(accountsTable,limit: 1,where: 'ingamename = ?',whereArgs: [ingamename]);
+    if(results.isEmpty){
+      throw CouldNotFindAcc();
+    }
+    else{
+      return DatabaseAccounts.fromRow(results.first);
+    }
+  }
+
+  Future<void> deleteAccount({required int id}) async{
+    final db = _getDatabaseOrThrow();
+    final deletedCount = await db.delete(accountsTable,where: 'id = ?', whereArgs: [id],);
+    if(deletedCount != 1){
+      throw CouldNotDeleteAcc();
+    }
+  }
 
 
-}
+  Future<Iterable<DatabaseVMs>> getAllVMs() async{
+    final db = _getDatabaseOrThrow();
+    final vms = await db.query(vmTable);
 
 
-@immutable
-class DatabaseVMs{
-  final int id;
-  final int userId;
-  final String name;
-  final bool isWorking;
+    return vms.map((vmRow)=>DatabaseVMs.fromRow(vmRow));
+  }
 
-  const DatabaseVMs({
-    required this.id,
-    required this.userId,
-    required this.name,
-    required this.isWorking,
-  });
+  Future<Iterable<DatabaseAccounts>> getAllAccs() async{
+    final db = _getDatabaseOrThrow();
+    final accs = await db.query(vmTable);
 
-  DatabaseVMs.fromRow(Map<String, Object?> map): id = map[idColumn] as int, userId = map[userIdColumn] as int,name = map[nameColumn] as String, isWorking = (map[isWorkingColumn] as int) == 1 ? true : false;
 
-  @override
-  String toString() => 'VM, ID = $id, Name = $name, Working = $isWorking';
+    return accs.map((accRow)=>DatabaseAccounts.fromRow(accRow));
+  }
 
-  //18:23 boolean coop mozda fali
-  @override
-  bool operator == (covariant DatabaseUser other) => id == other.id;
-
-  @override
-  int get hashCode => id.hashCode;
-}
-
-@immutable
-class DatabaseAccounts{
-  final int id;
-  final int vmId;
-  final String username;
-  final String password;
-  final String ingamename;
-  final String rank;
-  final bool isPlaying;
-
-  const DatabaseAccounts({
-    required this.id,
-    required this.vmId,
-    required this.username,
-    required this.password,
-    required this.ingamename,
-    required this.rank,
-    required this.isPlaying,
-  });
-
-  DatabaseAccounts.fromRow(Map<String, Object?> map): id = map[idColumn] as int, vmId = map[vmIdColumn] as int,
-                                                      username = map[usernameColumn] as String,password = map[passwordColumn] as String,
-                                                      ingamename = map[ingamenameColumn] as String,
-                                                      rank = map[rankColumn] as String , isPlaying = (map[isPlayingColumn] as int) == 1 ? true : false;
-
-  @override
-  String toString() => 'VM = = $vmId, Nickname = $ingamename, Rank = $rank, Playing = $isPlaying';
-
-  @override
-  bool operator == (covariant DatabaseUser other) => id == other.id;
-
-  @override
-  int get hashCode => id.hashCode;
-
-//18:23 boolean coop mozda fali
+  Future<void> updateAccountRank({required String ingamename, required String rank}) async{
+    final db = _getDatabaseOrThrow();
+    await getAccount(ingamename: ingamename);
+    final countUpdates = await db.update(accountsTable, {rankColumn: rank});
+    if(countUpdates == 0){
+      throw CouldNotUpdateAccRank();
+    }
+  }
 
 }
+
+
+
+
+
