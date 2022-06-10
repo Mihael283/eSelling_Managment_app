@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:rma_project/constants/routes.dart';
+import 'package:rma_project/services/crud/db_services.dart';
 
 import '../enums/menu_action.dart';
 import '../services/auth/auth_service.dart';
+import '../services/crud/db_services.dart';
 
 class VMView extends StatefulWidget {
   const VMView({Key? key}) : super(key: key);
@@ -14,6 +16,20 @@ class VMView extends StatefulWidget {
 List<String> litems = ["1","2","Third","4"];
 
 class _VMViewState extends State<VMView> {
+  late final DBService _DBService;
+  String get userEmail => AuthService.firebase().currentUser!.email!;
+
+  @override
+  void initState() {
+    _DBService = DBService();
+    super.initState();
+  }
+  @override
+  void dispose() {
+    _DBService.close();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,19 +53,36 @@ class _VMViewState extends State<VMView> {
           },)
         ],
       ),
-      body: ListView.builder
-        (
-          itemCount: 2,
-          itemBuilder: (BuildContext context,int index){
-            return ListTile(
-                leading: Icon(Icons.list),
-                trailing: Text("Online/Offline",
-                  style: TextStyle(color: Colors.green,fontSize: 15),),
-                title:Text("VM $index"),
-                onTap: () => null
-            );
+      body: FutureBuilder(
+        future: _DBService.getOrCreateUser(email: userEmail),
+        builder: (context,snapshot){
+          switch(snapshot.connectionState){
+
+            case ConnectionState.none:
+              return const Text("AAA");
+            case ConnectionState.waiting:
+              return const Text("AAAA");
+            case ConnectionState.active:
+              return const Text("AAAAA");
+            case ConnectionState.done:
+              return StreamBuilder(
+                stream: _DBService.allVMS,
+                builder: (context,snapshot) {
+                  switch(snapshot.connectionState){
+                    case ConnectionState.done:
+                      return Text("DONE");
+                      break;
+                    default:
+                      return const CircularProgressIndicator();
+                  }
+                }
+              );
+            default:
+              return const CircularProgressIndicator();
+
           }
-      )
+        },
+      ),
     );
   }
 }
