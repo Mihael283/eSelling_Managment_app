@@ -4,7 +4,8 @@ import 'package:rma_project/services/auth/auth_service.dart';
 import 'package:rma_project/views/login_view.dart';
 import 'package:rma_project/views/register_view.dart';
 import 'package:rma_project/views/verify_email_view.dart';
-import 'package:rma_project/views/vm_view.dart';
+import 'package:rma_project/views/vms/new_vm_view.dart';
+import 'package:rma_project/views/home.dart';
 
 
 void main() {
@@ -21,6 +22,8 @@ void main() {
         registerRoute: (context) => const RegisterView(),
         VM_ScreenRoute: (context) => const VMView(),
         verifyEmailRoute: (context) => const VerifyEmailView(),
+        newVMRoute: (context) => const NewVMView(),
+
       },
     ),
   );

@@ -36,6 +36,9 @@ class _VMViewState extends State<VMView> {
       appBar: AppBar(
         title: const Text("Home"),
         actions: [
+          IconButton(onPressed: () {
+            Navigator.of(context).pushNamed(newVMRoute);
+          }, icon: const Icon(Icons.add)),
           PopupMenuButton<MenuAction>(onSelected: (value) async{
             switch(value){
               case MenuAction.logout:
@@ -69,11 +72,14 @@ class _VMViewState extends State<VMView> {
                 stream: _DBService.allVMS,
                 builder: (context,snapshot) {
                   switch(snapshot.connectionState){
+                    case ConnectionState.none:
+                      return const Text("AAA");
+                    case ConnectionState.waiting:
+                      return const Text("Please add VM by pressing add button...");
+                    case ConnectionState.active:
+                      return const Text("AAAAA");
                     case ConnectionState.done:
-                      return Text("DONE");
-                      break;
-                    default:
-                      return const CircularProgressIndicator();
+                      return const Text("Done");
                   }
                 }
               );
