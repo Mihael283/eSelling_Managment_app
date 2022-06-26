@@ -16,10 +16,16 @@ class DBService {
   List<DatabaseVMs> _vms = [];
 
   static final DBService _shared = DBService._sharedInstance();
-  DBService._sharedInstance();
+  DBService._sharedInstance() {
+    _vmStreamController = StreamController<List<DatabaseVMs>>.broadcast(
+      onListen: (){
+        _vmStreamController.sink.add(_vms);
+      }
+    );
+  }
   factory DBService() => _shared;
 
-  final _vmStreamController = StreamController<List<DatabaseVMs>>.broadcast();
+  late final StreamController<List<DatabaseVMs>> _vmStreamController;
 
   Stream<List<DatabaseVMs>> get allVMS => _vmStreamController.stream;
 
@@ -27,6 +33,7 @@ class DBService {
     final allVMs = await getAllVMs();
     _vms = allVMs.toList();
     _vmStreamController.add(_vms);
+    print("Here are all VMS $_vms");
   }
 
   Future<DatabaseUser> getOrCreateUser({required String email}) async{
@@ -65,11 +72,10 @@ class DBService {
       throw DatabaseAlreadyOpenException();
     }
     try{
-      final docsPath = await getApplicationDocumentsDirectory();
-      final dbPath = join(docsPath.path,dbName);
+      final docsPath = await getDatabasesPath();
+      final dbPath = join(docsPath,dbName);
       final db = await openDatabase(dbPath);
       _db = db;
-
       await db.execute(createUserTable);
       await db.execute(createVmsTable);
       await db.execute(createAccountsTable);

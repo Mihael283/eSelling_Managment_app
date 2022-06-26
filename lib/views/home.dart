@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rma_project/constants/routes.dart';
 import 'package:rma_project/services/crud/db_services.dart';
+import 'package:rma_project/services/crud/db_vms.dart';
 
 import '../enums/menu_action.dart';
 import '../services/auth/auth_service.dart';
@@ -13,8 +14,6 @@ class VMView extends StatefulWidget {
   State<VMView> createState() => _VMViewState();
 }
 
-List<String> litems = ["1","2","Third","4"];
-
 class _VMViewState extends State<VMView> {
   late final DBService _DBService;
   String get userEmail => AuthService.firebase().currentUser!.email!;
@@ -24,11 +23,7 @@ class _VMViewState extends State<VMView> {
     _DBService = DBService();
     super.initState();
   }
-  @override
-  void dispose() {
-    _DBService.close();
-    super.dispose();
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -60,26 +55,42 @@ class _VMViewState extends State<VMView> {
         future: _DBService.getOrCreateUser(email: userEmail),
         builder: (context,snapshot){
           switch(snapshot.connectionState){
-
-            case ConnectionState.none:
-              return const Text("AAA");
-            case ConnectionState.waiting:
-              return const Text("AAAA");
-            case ConnectionState.active:
-              return const Text("AAAAA");
             case ConnectionState.done:
               return StreamBuilder(
                 stream: _DBService.allVMS,
                 builder: (context,snapshot) {
                   switch(snapshot.connectionState){
-                    case ConnectionState.none:
-                      return const Text("AAA");
                     case ConnectionState.waiting:
-                      return const Text("Please add VM by pressing add button...");
                     case ConnectionState.active:
-                      return const Text("AAAAA");
+                      if(snapshot.hasData){
+                        final allVMS = snapshot.data as List<DatabaseVMs>;
+                        print(allVMS[0]);
+                        return ListView.builder(
+                            itemCount: allVMS.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              final vm_name = allVMS[index].name;
+                              final vm_status = allVMS[index].isWorking;
+                              var vm_state = "Offline";
+
+                              if(allVMS[index].isWorking){
+                                vm_state = "Online";
+                              }
+                              return ListTile(
+                                  leading: const Icon(Icons.computer_rounded),
+                                  trailing: Text(
+                                    vm_state,
+
+                                    style: TextStyle(color: vm_status ? Colors.green : Colors.red, fontSize: 15),
+                                  ),
+                                  title: Text("$vm_name"));
+                            });
+                      }else{
+                        return const Text("Please add a VM");
+                      }
                     case ConnectionState.done:
                       return const Text("Done");
+                    default:
+                      return const CircularProgressIndicator();
                   }
                 }
               );
