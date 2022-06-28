@@ -6,7 +6,7 @@ import 'package:rma_project/services/crud/db_vms.dart';
 import '../../enums/menu_action.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/crud/db_services.dart';
-import '../../utilities/show_error_dialog.dart';
+import '../../utilities/error_dialog.dart';
 
 class NewVMView extends StatefulWidget {
   const NewVMView({Key? key}) : super(key: key);

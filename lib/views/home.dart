@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:rma_project/constants/routes.dart';
 import 'package:rma_project/services/crud/db_services.dart';
 import 'package:rma_project/services/crud/db_vms.dart';
+import 'package:rma_project/utilities/logout_dialog.dart';
 
 import '../enums/menu_action.dart';
 import '../services/auth/auth_service.dart';
 import '../services/crud/db_services.dart';
+import '../utilities/delete_dialog.dart';
 
 class VMView extends StatefulWidget {
   const VMView({Key? key}) : super(key: key);
@@ -37,7 +39,7 @@ class _VMViewState extends State<VMView> {
           PopupMenuButton<MenuAction>(onSelected: (value) async{
             switch(value){
               case MenuAction.logout:
-                final shouldLogout = await showLogOutDialog(context);
+                final shouldLogout = await showLogoutDialog(context);
                 if (shouldLogout) {
                   await AuthService.firebase().logOut();
                   Navigator.of(context).pushNamedAndRemoveUntil(loginRoute, (_) => false,);
@@ -64,26 +66,37 @@ class _VMViewState extends State<VMView> {
                     case ConnectionState.active:
                       if(snapshot.hasData){
                         final allVMS = snapshot.data as List<DatabaseVMs>;
-                        print(allVMS[0]);
                         return ListView.builder(
                             itemCount: allVMS.length,
                             itemBuilder: (BuildContext context, int index) {
                               final vm_name = allVMS[index].name;
                               final vm_status = allVMS[index].isWorking;
                               var vm_state = "Offline";
-
+                              final vm_id = allVMS[index].id;
                               if(allVMS[index].isWorking){
                                 vm_state = "Online";
                               }
                               return ListTile(
                                   leading: const Icon(Icons.computer_rounded),
-                                  trailing: Text(
-                                    vm_state,
-
-                                    style: TextStyle(color: vm_status ? Colors.green : Colors.red, fontSize: 15),
+                                  onTap: () {},
+                                  trailing: Wrap(
+                                    spacing: 12,
+                                    children: <Widget>[
+                                      Text(
+                                        vm_state,
+                                        style: TextStyle(color: vm_status ? Colors.green : Colors.red, fontSize: 15, height: 2.5),
+                                      ),
+                                      IconButton(onPressed: () async {
+                                        final shouldDelete = await showDeleteDialog(context);
+                                        if(shouldDelete){
+                                          _DBService.deleteVM(id: vm_id);
+                                        }
+                                      }, icon: const Icon(Icons.delete))
+                                    ],
                                   ),
                                   title: Text("$vm_name"));
-                            });
+                            },
+                            );
                       }else{
                         return const Text("Please add a VM");
                       }
@@ -102,21 +115,4 @@ class _VMViewState extends State<VMView> {
       ),
     );
   }
-}
-
-Future<bool> showLogOutDialog(BuildContext context){
-  return showDialog<bool>(
-    context: context,
-    builder: (context){
-      return AlertDialog(
-        title: const Text("Sign out"),
-        content: const Text("Are you sure you want to sign out?"),
-        actions:[
-          TextButton(onPressed: () { Navigator.of(context).pop(false);}, child: const Text("Cancel")),
-          TextButton(onPressed: () { Navigator.of(context).pop(true);}, child: const Text("Sign out")),
-        ],
-
-      );
-    },
-  ).then((value) => value ?? false);
 }

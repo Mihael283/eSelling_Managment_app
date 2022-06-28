@@ -4,7 +4,7 @@ import 'package:rma_project/firebase_options.dart';
 import 'package:rma_project/services/auth/auth_service.dart';
 
 import '../services/auth/auth_exceptions.dart';
-import '../utilities/show_error_dialog.dart';
+import '../utilities/error_dialog.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({Key? key}) : super(key: key);
