@@ -6,7 +6,7 @@ import '../../constants/database.dart';
 @immutable
 class DatabaseAccounts{
   final int id;
-  final String vmName;
+  final int vmId;
   final String username;
   final String password;
   final String ingamename;
@@ -15,7 +15,7 @@ class DatabaseAccounts{
 
   const DatabaseAccounts({
     required this.id,
-    required this.vmName,
+    required this.vmId,
     required this.username,
     required this.password,
     required this.ingamename,
@@ -23,13 +23,13 @@ class DatabaseAccounts{
     required this.isPlaying,
   });
 
-  DatabaseAccounts.fromRow(Map<String, Object?> map): id = map[idColumn] as int, vmName = map[vmNameColumn] as String,
+  DatabaseAccounts.fromRow(Map<String, Object?> map): id = map[idColumn] as int, vmId = map[vmIdColumn] as int,
         username = map[usernameColumn] as String,password = map[passwordColumn] as String,
         ingamename = map[ingamenameColumn] as String,
         rank = map[rankColumn] as String , isPlaying = (map[isPlayingColumn] as int) == 1 ? true : false;
 
   @override
-  String toString() => 'VM = = $vmName, Nickname = $ingamename, Rank = $rank, Playing = $isPlaying';
+  String toString() => 'VmID = $vmId, Nickname = $ingamename, Rank = $rank, Playing = $isPlaying';
 
   @override
   bool operator == (covariant DatabaseAccounts other) => id == other.id;

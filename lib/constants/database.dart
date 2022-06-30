@@ -13,7 +13,7 @@ const usernameColumn = 'username';
 const passwordColumn = 'password';
 const rankColumn = 'rank';
 const isPlayingColumn = 'isPlaying';
-const vmNameColumn = 'vm_name';
+const vmIdColumn = 'vm_id';
 const ingamenameColumn = 'ingamename';
 
 

@@ -39,6 +39,8 @@ dependencies:
   sqflite: ^2.0.2+1
   path_provider: ^2.0.10
   path: ^1.8.1
+  open_mail_app: ^0.4.5
+  http: ^0.13.4
 
 dev_dependencies:
   flutter_test:

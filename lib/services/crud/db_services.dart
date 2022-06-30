@@ -14,6 +14,7 @@ import 'db_vms.dart';
 class DBService {
   Database? _db;
   List<DatabaseVMs> _vms = [];
+  List<DatabaseAccounts> _accs = [];
 
   static final DBService _shared = DBService._sharedInstance();
   DBService._sharedInstance() {
@@ -22,18 +23,30 @@ class DBService {
         _vmStreamController.sink.add(_vms);
       }
     );
+    _accStreamController = StreamController<List<DatabaseAccounts>>.broadcast(
+      onListen: (){
+        _accStreamController.sink.add(_accs);
+      }
+    );
   }
   factory DBService() => _shared;
 
   late final StreamController<List<DatabaseVMs>> _vmStreamController;
+  late final StreamController<List<DatabaseAccounts>> _accStreamController;
 
   Stream<List<DatabaseVMs>> get allVMS => _vmStreamController.stream;
+  Stream<List<DatabaseAccounts>> get allAccs => _accStreamController.stream;
 
   Future<void> cacheVms() async{
     final allVMs = await getAllVMs();
     _vms = allVMs.toList();
     _vmStreamController.add(_vms);
-    print("Here are all VMS $_vms");
+  }
+
+  Future<void> cacheAccounts() async{
+    final allAccs = await getAllAccs();
+    _accs = allAccs.toList();
+    _accStreamController.add(_accs);
   }
 
   Future<DatabaseUser> getOrCreateUser({required String email}) async{
@@ -49,6 +62,7 @@ class DBService {
 
 
   }
+
   Database _getDatabaseOrThrow(){
     final db = _db;
     if(db == null){
@@ -81,6 +95,7 @@ class DBService {
       await db.execute(createAccountsTable);
 
       await cacheVms();
+      await cacheAccounts();
 
     } on MissingPlatformDirectoryException{
       throw MissingPlatformDirectoryException("Jbga");
@@ -148,17 +163,17 @@ class DBService {
     return VM;
   }
 
-  Future<DatabaseVMs> getVM({required String name}) async{
+  Future<DatabaseVMs> getVM({required int id}) async{
     await ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
-    final results = await db.query(vmTable,limit: 1,where: 'name = ?',whereArgs: [name.toLowerCase()]);
+    final results = await db.query(vmTable,limit: 1,where: 'id = ?',whereArgs: [id]);
 
     if(results.isEmpty){
       throw CouldNotFindVM();
     }
     else{
       final vm = DatabaseVMs.fromRow(results.first);
-      _vms.removeWhere((vm) => vm.name == name);
+      _vms.removeWhere((vm) => vm.id == id);
       _vms.add(vm);
       _vmStreamController.add(_vms);
       return vm;
@@ -178,17 +193,15 @@ class DBService {
 
   }
 
-  Future<DatabaseAccounts> addAccount({required DatabaseVMs vm, required String username, required String password, required String ingamename }) async{
+  Future<DatabaseAccounts> addAccount({required int vm_id, required String username, required String password, required String ingamename }) async{
     await ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
-    final dbVM = await getVM(name: vm.name);
-    if(dbVM != vm){
-      throw CouldNotDeleteVM();
-    }
 
-    final accountID = await db.insert(accountsTable,{vmNameColumn: vm.name, usernameColumn: username ,passwordColumn: password, ingamenameColumn: ingamename, isPlayingColumn: 0});
-    final acc = DatabaseAccounts(id: accountID, vmName: vm.name, username: username, password: password, ingamename: ingamename, rank: "unknown", isPlaying: false);
+    final accountID = await db.insert(accountsTable,{vmIdColumn: vm_id, usernameColumn: username ,passwordColumn: password, ingamenameColumn: ingamename, rankColumn: "unknown", isPlayingColumn: 0});
+    final acc = DatabaseAccounts(id: accountID, vmId: vm_id, username: username, password: password, ingamename: ingamename, rank: "unknown", isPlaying: false);
 
+    _accs.add(acc);
+    _accStreamController.add(_accs);
     return acc;
   }
 
@@ -204,12 +217,29 @@ class DBService {
     }
   }
 
+  Future<Iterable<DatabaseAccounts>> getAccounts({required int vm_id}) async{
+    await ensureDbIsOpen();
+    final db = _getDatabaseOrThrow();
+    final results = await db.query(accountsTable,where: 'vm_id = ?',whereArgs: [vm_id]);
+    if(results.isEmpty){
+      throw CouldNotFindAcc();
+    }
+    else{
+
+      return results.map((accRow)=>DatabaseAccounts.fromRow(accRow));
+    }
+  }
+
   Future<void> deleteAccount({required int id}) async{
     await ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final deletedCount = await db.delete(accountsTable,where: 'id = ?', whereArgs: [id],);
     if(deletedCount != 1){
       throw CouldNotDeleteAcc();
+    }
+    else{
+      _accs.removeWhere((acc) => acc.id == id);
+      _accStreamController.add(_accs);
     }
   }
 
@@ -226,9 +256,7 @@ class DBService {
   Future<Iterable<DatabaseAccounts>> getAllAccs() async{
     await ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
-    final accs = await db.query(vmTable);
-
-
+    final accs = await db.query(accountsTable);
     return accs.map((accRow)=>DatabaseAccounts.fromRow(accRow));
   }
 

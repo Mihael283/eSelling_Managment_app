@@ -3,20 +3,25 @@ import 'package:rma_project/constants/routes.dart';
 import 'package:rma_project/services/crud/db_services.dart';
 import 'package:rma_project/services/crud/db_vms.dart';
 import 'package:rma_project/utilities/logout_dialog.dart';
+import 'package:rma_project/views/vms/vm_view.dart';
 
 import '../enums/menu_action.dart';
 import '../services/auth/auth_service.dart';
 import '../services/crud/db_services.dart';
 import '../utilities/delete_dialog.dart';
 
-class VMView extends StatefulWidget {
-  const VMView({Key? key}) : super(key: key);
+import 'package:open_mail_app/open_mail_app.dart';
+import 'package:http/http.dart' as http;
+import '../utilities/error_dialog.dart';
+
+class CreateUpdateVMView extends StatefulWidget {
+  const CreateUpdateVMView({Key? key}) : super(key: key);
 
   @override
-  State<VMView> createState() => _VMViewState();
+  State<CreateUpdateVMView> createState() => _CreateUpdateVMViewState();
 }
 
-class _VMViewState extends State<VMView> {
+class _CreateUpdateVMViewState extends State<CreateUpdateVMView> {
   late final DBService _DBService;
   String get userEmail => AuthService.firebase().currentUser!.email!;
 
@@ -33,8 +38,24 @@ class _VMViewState extends State<VMView> {
       appBar: AppBar(
         title: const Text("Home"),
         actions: [
+          IconButton(onPressed: () async{
+            var result = await OpenMailApp.openMailApp();
+
+            if (!result.didOpen && !result.canOpen) {
+              showNoMailAppsDialog(context);
+            }else if (!result.didOpen && result.canOpen) {
+              showDialog(
+                context: context,
+                builder: (_) {
+                  return MailAppPickerDialog(
+                    mailApps: result.options,
+                  );
+                },
+              );
+            }
+          }, icon: const Icon(Icons.email)),
           IconButton(onPressed: () {
-            Navigator.of(context).pushNamed(newVMRoute);
+            Navigator.of(context).pushNamed(createVMRoute);
           }, icon: const Icon(Icons.add)),
           PopupMenuButton<MenuAction>(onSelected: (value) async{
             switch(value){
@@ -78,7 +99,9 @@ class _VMViewState extends State<VMView> {
                               }
                               return ListTile(
                                   leading: const Icon(Icons.computer_rounded),
-                                  onTap: () {},
+                                  onTap: () {
+                                    Navigator.push(context,MaterialPageRoute(builder: (context) => VMView(vm_Id: vm_id, vm_name: vm_name,), ));
+                                  },
                                   trailing: Wrap(
                                     spacing: 12,
                                     children: <Widget>[
@@ -115,4 +138,25 @@ class _VMViewState extends State<VMView> {
       ),
     );
   }
+
+  void showNoMailAppsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+            title: Text("Open Mail App"),
+            content: Text("No mail apps installed"),
+            actions: <Widget>[
+              TextButton(
+                child: Text("OK"),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              )
+            ],
+        );
+      },
+    );
+  }
+
 }

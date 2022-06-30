@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:rma_project/constants/routes.dart';
 import 'package:rma_project/services/auth/auth_service.dart';
+import 'package:rma_project/views/accounts/add_account_view.dart';
 import 'package:rma_project/views/login_view.dart';
 import 'package:rma_project/views/register_view.dart';
 import 'package:rma_project/views/verify_email_view.dart';
-import 'package:rma_project/views/vms/new_vm_view.dart';
+import 'package:rma_project/views/vms/create_vm_view.dart';
 import 'package:rma_project/views/home.dart';
+import 'package:rma_project/views/vms/vm_view.dart';
 
 
 void main() {
@@ -20,9 +22,11 @@ void main() {
       routes: {
         loginRoute: (context) => const LoginView(),
         registerRoute: (context) => const RegisterView(),
-        VM_ScreenRoute: (context) => const VMView(),
+        VM_ScreenRoute: (context) => const CreateUpdateVMView(),
         verifyEmailRoute: (context) => const VerifyEmailView(),
-        newVMRoute: (context) => const NewVMView(),
+        createVMRoute: (context) => const NewVMView(),
+        viewVMRoute: (context) => const VMView(),
+        addAccRoute: (context) => const AddAccount(),
 
       },
     ),
@@ -43,7 +47,7 @@ class HomePage extends StatelessWidget {
             final user = AuthService.firebase().currentUser;
             if(user != null){
               if(user.isEmailVerified){
-                return const VMView();
+                return const CreateUpdateVMView();
               }
               else{
                 return const VerifyEmailView();
