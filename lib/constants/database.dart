@@ -17,6 +17,7 @@ const vmIdColumn = 'vm_id';
 const ingamenameColumn = 'ingamename';
 
 
+var apiKey = "";
 
 const createAccountsTable = '''
         CREATE TABLE IF NOT EXISTS "accounts" (

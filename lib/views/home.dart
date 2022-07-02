@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:rma_project/constants/routes.dart';
 import 'package:rma_project/services/crud/db_services.dart';
@@ -5,6 +7,7 @@ import 'package:rma_project/services/crud/db_vms.dart';
 import 'package:rma_project/utilities/logout_dialog.dart';
 import 'package:rma_project/views/vms/vm_view.dart';
 
+import '../constants/routes.dart';
 import '../enums/menu_action.dart';
 import '../services/auth/auth_service.dart';
 import '../services/crud/db_services.dart';
@@ -12,22 +15,24 @@ import '../utilities/delete_dialog.dart';
 
 import 'package:open_mail_app/open_mail_app.dart';
 import 'package:http/http.dart' as http;
-import '../utilities/error_dialog.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
 
-class CreateUpdateVMView extends StatefulWidget {
-  const CreateUpdateVMView({Key? key}) : super(key: key);
+class HomeView extends StatefulWidget {
+  const HomeView({Key? key}) : super(key: key);
 
   @override
-  State<CreateUpdateVMView> createState() => _CreateUpdateVMViewState();
+  State<HomeView> createState() => _HomeViewState();
 }
 
-class _CreateUpdateVMViewState extends State<CreateUpdateVMView> {
+class _HomeViewState extends State<HomeView> {
   late final DBService _DBService;
   String get userEmail => AuthService.firebase().currentUser!.email!;
 
   @override
   void initState() {
+    fetchVMState();
     _DBService = DBService();
+
     super.initState();
   }
 
@@ -38,6 +43,10 @@ class _CreateUpdateVMViewState extends State<CreateUpdateVMView> {
       appBar: AppBar(
         title: const Text("Home"),
         actions: [
+          IconButton(onPressed: () async{
+            Phoenix.rebirth(context);
+            fetchVMState();
+          }, icon: const Icon(Icons.refresh)),
           IconButton(onPressed: () async{
             var result = await OpenMailApp.openMailApp();
 
@@ -159,4 +168,30 @@ class _CreateUpdateVMViewState extends State<CreateUpdateVMView> {
     );
   }
 
+  Future<void> fetchVMState() async {
+    final response = await http
+        .get(Uri.parse('https://api.jsonbin.io/v3/b/62bda84c402a5b3802436dbf'));
+    if (response.statusCode == 200) {
+      // If the server did return a 200 OK response,
+      // then parse the JSON.
+      Map<String, dynamic> map = json.decode(response.body);
+      bool status = map['record']['VM'];
+      String time = map['record']['Time'];
+      DateTime VM_time = DateTime.parse(time);
+      DateTime Real_time = DateTime.now();
+
+      Duration diff = Real_time.difference(VM_time);
+      Duration min = const Duration(minutes:20);
+      if(diff < min && status == true){
+        _DBService.updateVMStatus(status: status);
+      }
+      else{
+        _DBService.updateVMStatus(status: false);
+      }
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load status');
+    }
+  }
 }

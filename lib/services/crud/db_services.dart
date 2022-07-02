@@ -263,13 +263,20 @@ class DBService {
   Future<void> updateAccountRank({required String ingamename, required String rank}) async{
     await ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
-    await getAccount(ingamename: ingamename);
-    final countUpdates = await db.update(accountsTable, {rankColumn: rank});
+    final countUpdates = await db.update(accountsTable, {rankColumn: rank},where: 'ingamename = ?', whereArgs: [ingamename],);
     if(countUpdates == 0){
       throw CouldNotUpdateAccRank();
     }
   }
 
+  Future<void> updateVMStatus({required bool status}) async{
+    await ensureDbIsOpen();
+    final db = _getDatabaseOrThrow();
+    final countUpdates = await db.update(vmTable, {isWorkingColumn: status});
+    if(countUpdates == 0){
+      throw CouldNotUpdateAccRank();
+    }
+  }
 }
 
 

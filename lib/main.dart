@@ -8,11 +8,12 @@ import 'package:rma_project/views/verify_email_view.dart';
 import 'package:rma_project/views/vms/create_vm_view.dart';
 import 'package:rma_project/views/home.dart';
 import 'package:rma_project/views/vms/vm_view.dart';
-
+import 'package:flutter_phoenix/flutter_phoenix.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(
+    Phoenix(child:
     MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -22,7 +23,7 @@ void main() {
       routes: {
         loginRoute: (context) => const LoginView(),
         registerRoute: (context) => const RegisterView(),
-        VM_ScreenRoute: (context) => const CreateUpdateVMView(),
+        VM_ScreenRoute: (context) => const HomeView(),
         verifyEmailRoute: (context) => const VerifyEmailView(),
         createVMRoute: (context) => const NewVMView(),
         viewVMRoute: (context) => const VMView(),
@@ -30,7 +31,7 @@ void main() {
 
       },
     ),
-  );
+  ));
 }
 
 
@@ -47,7 +48,7 @@ class HomePage extends StatelessWidget {
             final user = AuthService.firebase().currentUser;
             if(user != null){
               if(user.isEmailVerified){
-                return const CreateUpdateVMView();
+                return const HomeView();
               }
               else{
                 return const VerifyEmailView();
